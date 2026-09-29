@@ -93,7 +93,13 @@ pipeline {
 
         stage('SonarQube') {
             steps {
-                echo 'TODO: configure SonarQube Scanner / server credentials.'
+                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                    sh '''
+                        sonar-scanner \
+                          -Dsonar.host.url=http://sonarqube:9000 \
+                          -Dsonar.token=$SONAR_TOKEN
+                    '''
+                }
             }
         }
 
