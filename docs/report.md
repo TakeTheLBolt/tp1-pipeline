@@ -1,7 +1,9 @@
-# Rapport — Industrialisation de la pipeline Real-Time Sales
+# Rapport Industrialisation de la pipeline Real-Time Sales
 
 Projet : Real-Time Sales Analytics Pipeline (FastAPI, Kafka, PySpark, PostgreSQL)
-Outils CI : Jenkins, SonarQube, pytest — dépôt : https://github.com/TakeTheLBolt/tp1-pipeline
+Outils CI : Jenkins, SonarQube, pytest 
+
+dépôt : https://github.com/TakeTheLBolt/tp1-pipeline
 
 ## 1. Architecture du projet
 
@@ -44,9 +46,9 @@ pour qu'un `pytest` lancé sans Docker n'échoue pas. Les attentes utilisent un 
 
 ## 4. Tests d'intégration
 
-- **Test A — API → Kafka** (`test_api_kafka.py`) : un `POST /api/orders` est envoyé, puis un consumer
+- **Test A : API → Kafka** (`test_api_kafka.py`) : un `POST /api/orders` est envoyé, puis un consumer
   (groupe unique) relit `sales.orders` jusqu'à retrouver l'`order_id`, et les valeurs sont contrôlées.
-- **Test B — Kafka → Spark → PostgreSQL** (`test_spark_postgres.py`) : un événement est publié directement
+- **Test B : Kafka → Spark → PostgreSQL** (`test_spark_postgres.py`) : un événement est publié directement
   dans Kafka, puis on attend (timeout 90 s) qu'il apparaisse dans `processed_orders` avec les bonnes valeurs.
 
 ## 5. Scénario End-to-End
@@ -110,7 +112,7 @@ Analyse SonarQube (code complet) :
 | Duplications | 0 % | 0 % |
 | Quality Gate | Passed | Passed |
 
-Tests : 10 unitaires, 3 d'intégration (dont le `test_health` du projet de départ), 2 E2E — tous verts.
+Tests : 10 unitaires, 3 d'intégration (dont le `test_health` du projet de départ), 2 E2E  tous verts.
 
 ![Issues avant correction](images/sonar-issues-avant.png)
 ![Vue d'ensemble après correction](images/sonar-overall-apres.png)
