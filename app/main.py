@@ -87,37 +87,3 @@ def create_order(order: Order):
         producer.close()
 
     return event
-
-
-def apply_discount(order: Order, rate: float) -> float:
-    if rate < 0 or rate > 1:
-        raise ValueError("rate must be between 0 and 1")
-    if order.quantity >= 100:
-        rate = min(rate + 0.05, 1)
-    if order.unit_price > 1000:
-        rate = min(rate + 0.02, 1)
-    total = order.quantity * order.unit_price
-    return round(total * (1 - rate), 2)
-
-
-def shipping_cost(order: Order, country: str) -> float:
-    base = {"FR": 5.0, "DE": 7.0, "US": 15.0}.get(country)
-    if base is None:
-        raise ValueError("unsupported country")
-    weight = order.quantity * 0.5
-    cost = base
-    if weight > 10:
-        cost += 5
-    if weight > 25:
-        cost += 10
-    if weight > 50:
-        cost += 20
-    if order.unit_price * order.quantity > 500:
-        cost = 0.0
-    if country == "US" and weight > 100:
-        cost += 50
-    if country == "DE" and weight > 100:
-        cost += 30
-    if country == "FR" and weight > 100:
-        cost += 20
-    return round(cost, 2)
