@@ -87,3 +87,14 @@ def create_order(order: Order):
         producer.close()
 
     return event
+
+
+def apply_discount(order: Order, rate: float) -> float:
+    if rate < 0 or rate > 1:
+        raise ValueError("rate must be between 0 and 1")
+    if order.quantity >= 100:
+        rate = min(rate + 0.05, 1)
+    if order.unit_price > 1000:
+        rate = min(rate + 0.02, 1)
+    total = order.quantity * order.unit_price
+    return round(total * (1 - rate), 2)
