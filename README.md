@@ -2,6 +2,9 @@
 
 Projet fil rouge : industrialiser une pipeline Big Data de ventes temps réel avec tests, Jenkins et SonarQube.
 
+## Contributeurs
+VINCENT BURGEVIN
+LUCAS TEAR
 ## Stack
 
 - FastAPI : API REST de ventes
