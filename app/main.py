@@ -44,7 +44,7 @@ def build_order_event(order: Order) -> dict:
         "product_id": order.product_id,
         "quantity": order.quantity,
         "unit_price": order.unit_price,
-        "total_amount": round(order.quantity * order.unit_price, 2),
+        "total_amount": round(order.quantity + order.unit_price, 2),
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
