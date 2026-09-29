@@ -10,3 +10,4 @@ htmlcov/
 logs/
 coverage.xml
 test-results-*.xml
+.scannerwork/

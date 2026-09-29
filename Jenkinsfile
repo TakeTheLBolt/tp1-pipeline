@@ -105,7 +105,9 @@ pipeline {
 
         stage('Quality Gate') {
             steps {
-                echo 'TODO: waitForQualityGate() after SonarQube integration.'
+                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                    sh '$VENV/bin/python scripts/wait_quality_gate.py'
+                }
             }
         }
     }
