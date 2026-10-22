@@ -64,8 +64,9 @@ Pods par le label `app: sales-api`, l'a pris en charge sans aucune modification 
 réplica) a été rétabli automatiquement.
 
 Limite observée : `kubectl port-forward service/...` se rattache au Pod choisi à son lancement. La
-suppression de ce Pod coupe le port-forward, qu'il faut relancer. Le Service, lui, n'est pas interrompu
-pour les clients situés dans le cluster.
+suppression de ce Pod coupe le port-forward, qu'il faut relancer. Dans le cluster, le Service bascule
+automatiquement vers le nouveau Pod ; avec un seul réplica, l'API reste toutefois indisponible les quelques
+secondes nécessaires à son démarrage (avec plusieurs réplicas, les autres Pods continueraient à répondre).
 
 ## D. Flux Data
 
