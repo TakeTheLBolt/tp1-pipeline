@@ -1,0 +1,6 @@
+NAME         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)     AGE
+kafka        ClusterIP   10.99.237.121    <none>        29092/TCP   103s
+kubernetes   ClusterIP   10.96.0.1        <none>        443/TCP     13m
+postgres     ClusterIP   10.101.196.125   <none>        5432/TCP    103s
+sales-api    ClusterIP   10.108.110.151   <none>        8000/TCP    103s
+zookeeper    ClusterIP   10.101.133.117   <none>        2181/TCP    102s

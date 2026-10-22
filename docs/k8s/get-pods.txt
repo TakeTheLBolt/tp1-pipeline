@@ -1,0 +1,7 @@
+NAME                              READY   STATUS      RESTARTS   AGE    IP           NODE       NOMINATED NODE   READINESS GATES
+kafka-84f778947f-9m9lc            1/1     Running     0          102s   10.244.0.5   minikube   <none>           <none>
+kafka-create-topic-j92z9          0/1     Completed   0          102s   10.244.0.4   minikube   <none>           <none>
+postgres-df85bc796-rrr8l          1/1     Running     0          102s   10.244.0.6   minikube   <none>           <none>
+sales-api-7767ff7f79-nk79m        1/1     Running     0          102s   10.244.0.3   minikube   <none>           <none>
+spark-streaming-bd4bb477b-j7dw6   1/1     Running     0          101s   10.244.0.7   minikube   <none>           <none>
+zookeeper-66795f4664-cjww4        1/1     Running     0          101s   10.244.0.8   minikube   <none>           <none>

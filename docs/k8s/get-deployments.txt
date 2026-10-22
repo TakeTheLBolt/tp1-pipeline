@@ -1,0 +1,6 @@
+NAME              READY   UP-TO-DATE   AVAILABLE   AGE
+kafka             1/1     1            1           102s
+postgres          1/1     1            1           102s
+sales-api         1/1     1            1           102s
+spark-streaming   1/1     1            1           101s
+zookeeper         1/1     1            1           101s
