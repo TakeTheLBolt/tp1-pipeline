@@ -15,3 +15,6 @@ test:
 
 clean:
 	docker compose down -v
+
+quality-gate:
+	python3 scripts/setup_quality_gate.py

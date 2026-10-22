@@ -106,21 +106,32 @@ archivé. Jenkins est sur le réseau Docker : les tests ciblent les services par
 
 ## 8. Quality Gate
 
+**Gate personnalisé « Real-Time Sales », sur l'ensemble du code.** Le gate par défaut (*Sonar way*) ne
+contrôle que le *nouveau code*, et SonarQube y ignore la couverture quand le nouveau code compte trop peu de
+lignes : du code non testé pouvait donc passer (voir §10). Le gate du projet porte sur le code complet :
+
+| Condition | Échec si |
+|---|---|
+| Coverage | < 80 % |
+| Bugs | > 0 |
+| Vulnerabilities | > 0 |
+| Duplications | > 3 % |
+
+Il est défini dans le dépôt (`scripts/setup_quality_gate.py`, ou `make quality-gate`) plutôt que cliqué dans
+l'interface : le script crée le gate, remet ses conditions à jour, crée le projet s'il n'existe pas et lui
+associe le gate. Il est idempotent et permet de reconstruire la configuration après un `docker compose down -v`.
+
 Le stage Quality Gate exécute `scripts/wait_quality_gate.py` : il attend la fin de l'analyse via l'API
 SonarQube, lit le statut du Quality Gate, affiche chaque condition et **fait échouer la pipeline** si le
-statut n'est pas `OK`. Sortie du build n°11 :
+statut n'est pas `OK`. Sortie sur le code du dépôt :
 
 ```text
 Quality Gate : OK
-  new_coverage                              OK   valeur=100.0 seuil=80
-  new_duplicated_lines_density              OK   valeur=0.0   seuil=3
-  new_software_quality_reliability_rating   OK
-  new_software_quality_security_rating      OK
+  coverage                            OK     valeur=100.0 seuil=80
+  duplicated_lines_density            OK     valeur=0.0 seuil=3
+  bugs                                OK     valeur=0 seuil=0
+  vulnerabilities                     OK     valeur=0 seuil=0
 ```
-
-Limite : le gate appliqué contrôle les conditions sur le *nouveau code*, pas sur le code complet. De plus,
-SonarQube ignore la condition de couverture quand le nouveau code compte trop peu de lignes : quelques
-lignes non testées n'ont donc pas suffi à faire échouer le gate (voir §10).
 
 ## 9. Résultats obtenus
 
@@ -146,6 +157,22 @@ Tests : 10 unitaires, 3 d'intégration (dont le `test_health` du projet de dépa
 `assert 52.0 == 100.0`) et tous les stages suivants ont été sautés. Le calcul correct a ensuite été rétabli
 et la pipeline est repassée au vert.
 
+**Détection d'une dégradation de la qualité.** Une fonction de calcul de remise (16 lignes) a été
+ajoutée à `app/main.py` sans test. Les 10 tests unitaires restent verts, mais la couverture tombe à 73,7 % et
+le Quality Gate échoue, ce qui arrête la pipeline :
+
+```text
+Quality Gate : ERROR
+  coverage                            ERROR  valeur=73.7 seuil=80
+  duplicated_lines_density            OK     valeur=0.0 seuil=3
+  bugs                                OK     valeur=0 seuil=0
+  vulnerabilities                     OK     valeur=0 seuil=0
+Quality Gate en échec : pipeline arrêtée
+```
+
+Avec l'ancien gate (*Sonar way*, nouveau code uniquement), une modification de ce type était passée. Le code
+de démonstration a ensuite été retiré et le gate est repassé à `OK`.
+
 ## 10. Problèmes rencontrés
 
 - **Aucun plugin Jenkins installé** : `Pipeline`, `Git`, `JUnit` et `Sonar` ajoutés à l'image Jenkins.
@@ -160,10 +187,11 @@ et la pipeline est repassée au vert.
   idempotente (`ON CONFLICT DO NOTHING`).
 - **`docker compose down -v`** supprime aussi les volumes : SonarQube, Jenkins et PostgreSQL sont réinitialisés.
 - **Les tests d'intégration et E2E visaient la stack déjà lancée** : une modification de `app/` ou de
-  `spark/` n'était pas testée tant que la stack n'était pas reconstruite à la main. Corrigé par le stage
+  `spark/` n'était pas testée tant que la stack n'était pas reconstruite à la main. Corrigé par
   `scripts/ci_env.sh` (API et Spark du commit, Spark de la stack arrêté pendant les tests).
-- **Quality Gate non déclenché par un peu de code non testé** : la condition de couverture est ignorée sous
-  un certain nombre de nouvelles lignes, la dégradation de qualité n'a donc pas été démontrée.
+- **Quality Gate non déclenché par du code non testé** : le gate par défaut ne contrôle que le nouveau code
+  et ignore la couverture sous un certain nombre de nouvelles lignes. Corrigé par un gate personnalisé portant
+  sur l'ensemble du code (§8).
 
 ## 11. Corrections réalisées
 
@@ -173,6 +201,8 @@ et la pipeline est repassée au vert.
 - CI : image Jenkins complétée, Jenkinsfile industrialisé, contrôle du Quality Gate scripté.
 - CI : les tests d'intégration exécutent l'API et Spark du workspace, les tests E2E les images construites ;
   `test_api.py` appelle désormais l'API réelle au lieu d'un `TestClient` en mémoire.
+- Qualité : Quality Gate personnalisé sur l'ensemble du code (couverture, bugs, vulnérabilités,
+  duplications), versionné dans `scripts/setup_quality_gate.py`.
 - Des commits de démonstration (« TEST REGRESSION ») figurent dans l'historique ; le code non testé qu'ils
   avaient ajouté a été supprimé par le commit « Nettoyage ».
 
