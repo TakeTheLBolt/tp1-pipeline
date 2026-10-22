@@ -81,6 +81,15 @@ distinctes, et le Deployment indique `3/3` disponibles.
 
 Sortie : [delete-pod.txt](delete-pod.txt).
 
+**Recréation automatique d'un Pod supprimé par le Deployment**
+
+![Recréation automatique d'un Pod supprimé](images/05-delete-pod.png)
+
+Lors de cette seconde démonstration, le Pod `sales-api-7767ff7f79-6b8vn` passe en `Terminating` et le
+ReplicaSet crée immédiatement `sales-api-7767ff7f79-9jxpg`, prêt (`1/1`) en 6 secondes. Une seconde
+suppression du même nom renvoie `NotFound` : l'ancien Pod n'existe plus, seul son remplaçant tourne, et le
+Deployment est revenu à `1/1`.
+
 Après `kubectl delete pod sales-api-7767ff7f79-nk79m`, le ReplicaSet du Deployment a constaté qu'il ne
 restait plus aucun Pod sur l'unique réplica demandé. Il a aussitôt créé un Pod de remplacement,
 `sales-api-7767ff7f79-429tw`, avant même la fin de l'arrêt de l'ancien. Le nouveau Pod a un autre nom et
