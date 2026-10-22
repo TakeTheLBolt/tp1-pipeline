@@ -1,0 +1,11 @@
+# Volume persistant : les données survivent à la suppression ou à la recréation du Pod PostgreSQL.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

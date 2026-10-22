@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark-streaming
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spark-streaming
+  template:
+    metadata:
+      labels:
+        app: spark-streaming
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: spark
+          # Image construite dans Minikube depuis docker/spark/Dockerfile (voir README).
+          image: sales-spark:tp3
+          imagePullPolicy: IfNotPresent
+          # Même job que le service spark-streaming de docker-compose, en mode local :
+          # le cluster standalone spark-master / spark-worker n'est pas déployé.
+          command:
+            - /opt/spark/bin/spark-submit
+            - --master
+            - local[2]
+            - --conf
+            - spark.jars.ivy=/tmp/.ivy2
+            - --packages
+            - org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.7
+            - /opt/spark-app/sales_stream.py
+          envFrom:
+            - configMapRef:
+                name: sales-config
+            # POSTGRES_USER et POSTGRES_PASSWORD : Secret créé hors dépôt (voir README).
+            - secretRef:
+                name: postgres-secret

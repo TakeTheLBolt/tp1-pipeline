@@ -26,3 +26,44 @@ Les manifestes utilisent ces noms avec `imagePullPolicy: IfNotPresent`.
 
 Jenkins, SonarQube et le cluster Spark standalone (`spark-master`, `spark-worker`) ne sont pas déployés :
 Jenkins et SonarQube sont hors périmètre, et le job Spark tourne en mode `local` dans son Pod.
+
+## Secret PostgreSQL (hors dépôt)
+
+Les identifiants de la base ne sont ni dans une ConfigMap ni dans Git. Ils sont fournis par un Secret
+créé en ligne de commande avant le déploiement :
+
+```bash
+kubectl create secret generic postgres-secret \
+  --from-literal=POSTGRES_USER=sales \
+  --from-literal=POSTGRES_PASSWORD=<mot-de-passe>
+```
+
+PostgreSQL et Spark lisent `POSTGRES_USER` et `POSTGRES_PASSWORD` depuis ce Secret.
+
+## Manifestes
+
+| Fichier | Ressources |
+|---|---|
+| `configmap.yaml` | ConfigMap `sales-config` : hôtes Kafka et PostgreSQL (noms des Services), topic, base |
+| `postgres-init-configmap.yaml` | ConfigMap `postgres-init` : copie de `infra/postgres/init.sql` |
+| `postgres-pvc.yaml` | PersistentVolumeClaim `postgres-data` (1 Gi) |
+| `postgres-deployment.yaml`, `postgres-service.yaml` | Deployment et Service `postgres` (5432) |
+| `zookeeper.yaml` | Deployment et Service `zookeeper` (2181) |
+| `kafka.yaml` | Deployment et Service `kafka` (29092) |
+| `kafka-topic-job.yaml` | Job `kafka-create-topic` : création du topic `sales.orders` |
+| `api-deployment.yaml`, `api-service.yaml` | Deployment et Service `sales-api` (8000) |
+| `spark-deployment.yaml` | Deployment `spark-streaming` : job Spark en mode `local[2]` |
+
+Tous les Pods ont `enableServiceLinks: false` : sinon Kubernetes injecte des variables comme
+`KAFKA_PORT=tcp://...` (déduites du nom des Services), que les images Confluent interprètent comme de la
+configuration, et Kafka refuse de démarrer.
+
+## Déploiement
+
+```bash
+kubectl apply -f k8s/
+kubectl get deployments
+kubectl get pods -o wide
+kubectl get services
+kubectl port-forward service/sales-api 8000:8000
+```

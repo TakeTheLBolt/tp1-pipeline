@@ -1,0 +1,27 @@
+# Équivalent du service kafka-init de docker-compose : crée le topic avant que Spark s'y abonne.
+# Le Job est relancé tant que Kafka n'est pas joignable.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kafka-create-topic
+spec:
+  backoffLimit: 20
+  template:
+    spec:
+      enableServiceLinks: false
+      restartPolicy: OnFailure
+      containers:
+        - name: create-topic
+          image: confluentinc/cp-kafka:7.6.14
+          command:
+            - kafka-topics
+            - --bootstrap-server
+            - kafka:29092
+            - --create
+            - --if-not-exists
+            - --topic
+            - sales.orders
+            - --partitions
+            - "1"
+            - --replication-factor
+            - "1"
