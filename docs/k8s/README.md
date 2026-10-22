@@ -14,6 +14,16 @@ Sorties enregistrées juste après le déploiement :
 - [get-deployments.txt](get-deployments.txt) : `kubectl get deployments`
 - [get-services.txt](get-services.txt) : `kubectl get services`
 
+**Ressources Kubernetes après déploiement : Pods, Deployments et Services**
+
+![Ressources Kubernetes après déploiement](images/01-get-resources.png)
+
+Après `kubectl apply -f k8s/`, les 5 Deployments (API, PostgreSQL, Kafka, Zookeeper, Spark) sont
+disponibles (1/1), le Job de création du topic est terminé, et chaque composant est joignable dans le
+cluster par son Service (ClusterIP). Lors de ce second déploiement, `spark-streaming` et
+`kafka-create-topic` ont redémarré 3 fois : Kafka n'était pas encore prêt, et Kubernetes a relancé
+automatiquement les conteneurs en échec jusqu'à ce que la pipeline fonctionne.
+
 Les 5 Deployments (`kafka`, `postgres`, `sales-api`, `spark-streaming`, `zookeeper`) sont disponibles
 (1/1) et le Job `kafka-create-topic` est terminé (`Completed`), sans aucun redémarrage de Pod. Tous les
 Services sont de type `ClusterIP` : ils ne sont joignables qu'à l'intérieur du cluster.
