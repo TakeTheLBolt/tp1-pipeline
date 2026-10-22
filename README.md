@@ -266,3 +266,30 @@ Pour supprimer aussi les volumes :
 ```bash
 docker compose down -v
 ```
+
+## 9. Déploiement Kubernetes local (Minikube)
+
+Les manifestes sont dans [`k8s/`](k8s/) : API, PostgreSQL (avec volume persistant), Zookeeper, Kafka,
+création du topic et job Spark, reliés par des Services Kubernetes.
+
+```bash
+minikube start --driver=docker --memory=6g --cpus=4
+minikube image build -t sales-api:tp3 -f docker/api/Dockerfile .
+minikube image build -t sales-spark:tp3 -f docker/spark/Dockerfile .
+kubectl create secret generic postgres-secret \
+  --from-literal=POSTGRES_USER=sales --from-literal=POSTGRES_PASSWORD=<mot-de-passe>
+kubectl apply -f k8s/
+kubectl port-forward service/sales-api 8000:8000
+```
+
+Détail des manifestes et adaptations par rapport à Docker Compose : [`k8s/README.md`](k8s/README.md).
+Sorties `kubectl`, tests de l'API, mise à l'échelle, recréation d'un Pod et flux Data :
+[`docs/k8s/README.md`](docs/k8s/README.md).
+
+Nettoyage :
+
+```bash
+kubectl delete -f k8s/
+kubectl delete secret postgres-secret
+minikube stop
+```
