@@ -55,6 +55,14 @@ Sortie : [test-api.txt](test-api.txt). Avec `kubectl port-forward service/sales-
 répond depuis le poste : `/api/health` renvoie `{"status":"UP","service":"sales-api"}`, `/api/products`
 la liste des 4 produits et `/docs` un code HTTP 200.
 
+**Accès à l'API depuis le poste via `kubectl port-forward`**
+
+![Swagger de l'API via port-forward](images/02-api-swagger.png)
+
+La documentation Swagger servie par le Pod `sales-api` est accessible sur `http://localhost:8000/docs`
+grâce au port-forward du Service : elle expose les routes réelles du projet (`GET /api/health`,
+`GET /api/products`, `POST /api/orders`).
+
 ## B. Mise à l'échelle
 
 Sortie : [scale.txt](scale.txt). Après `kubectl scale deployment/sales-api --replicas=3`, deux nouveaux Pods
