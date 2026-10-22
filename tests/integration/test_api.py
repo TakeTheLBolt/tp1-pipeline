@@ -1,7 +1,9 @@
 import os
+
 import pytest
-from fastapi.testclient import TestClient
-from app.main import app
+import requests
+
+from tests.integration.helpers import API_URL
 
 RUN_INTEGRATION = os.getenv("RUN_INTEGRATION_TESTS", "false").lower() == "true"
 
@@ -10,10 +12,8 @@ pytestmark = pytest.mark.skipif(
     reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=true."
 )
 
-client = TestClient(app)
-
 
 def test_health():
-    response = client.get("/api/health")
+    response = requests.get(f"{API_URL}/api/health", timeout=10)
     assert response.status_code == 200
     assert response.json()["status"] == "UP"

@@ -11,3 +11,4 @@ logs/
 coverage.xml
 test-results-*.xml
 .scannerwork/
+sales-*.log

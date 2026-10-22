@@ -63,13 +63,36 @@ Un second test vérifie qu'une commande invalide (quantité négative) est rejet
 
 ## 6. Pipeline Jenkins
 
-`Jenkinsfile`, stages dans cet ordre : Checkout → Environment → Install (venv) → Unit Tests →
-Wait for Infrastructure → Integration Tests → Build (`docker build` des images API et Spark) → E2E Tests →
+`Jenkinsfile`, stages dans l'ordre du sujet : Checkout → Environment → Install (venv) → Unit Tests →
+Integration Tests → Build (`docker build` des images API et Spark, taguées `ci-<n° de build>`) → E2E Tests →
 SonarQube → Quality Gate.
+
+**Tester le code du commit, pas celui déjà déployé.** Les tests d'intégration et E2E ne visent pas les
+conteneurs de la stack `docker compose` (qui exécutent le code du dernier `docker compose up --build`), mais
+le code du commit, lancé par `scripts/ci_env.sh` contre Kafka et PostgreSQL de la stack, sur le topic
+`sales.orders` :
+
+- *Integration Tests* (avant le Build) : l'API du workspace est lancée avec `uvicorn` dans l'agent Jenkins, et
+  Spark tourne dans un conteneur éphémère `sales-spark-it-<n>` (image `apache/spark` + script
+  `spark/sales_stream.py` du commit).
+- *E2E Tests* (après le Build) : l'API et Spark tournent à partir des images qui viennent d'être construites
+  (`sales-api-e2e-<n>`, `sales-spark-e2e-<n>`). C'est donc l'artefact livrable qui est validé de bout en bout.
+
+Pendant ces deux stages, le Spark de la stack est arrêté : seul le Spark du commit consomme `sales.orders`,
+donc une ligne trouvée dans `processed_orders` prouve que c'est bien le code du commit qui l'a traitée
+(Spark tourne en mode `local[2]`, le cluster standalone étant occupé par le job de la stack). Le script
+attend que l'API réponde et que Spark soit démarré (polling avec timeout, arrêt immédiat si le conteneur
+Spark s'arrête). En fin de build (`post { always }`), les logs des conteneurs de test sont archivés, les
+conteneurs et les images sont supprimés et le Spark de la stack est redémarré (il reprend à son offset,
+l'insertion idempotente évite les doublons). `disableConcurrentBuilds()` empêche deux builds de se gêner.
+
+Vérification : avec un filtre Spark volontairement cassé (toutes les commandes rejetées), le test
+*Kafka → Spark → PostgreSQL* échoue au timeout et la pipeline s'arrête au stage *Integration Tests* ; avant
+cette correction, le Spark de la stack aurait écrit la ligne et le test serait passé.
 
 La pipeline s'arrête au premier stage en échec. Les résultats JUnit sont publiés et `coverage.xml` est
 archivé. Jenkins est sur le réseau Docker : les tests ciblent les services par leur nom
-(`sales-api`, `kafka:29092`, `postgres`).
+(`kafka:29092`, `postgres`, `sales-api-e2e-<n>`).
 
 ![Stage View Jenkins](images/jenkins-stage-view.png)
 
@@ -136,6 +159,9 @@ et la pipeline est repassée au vert.
 - **Spark plantait après un redémarrage** (clé primaire dupliquée, checkpoint perdu) : écriture rendue
   idempotente (`ON CONFLICT DO NOTHING`).
 - **`docker compose down -v`** supprime aussi les volumes : SonarQube, Jenkins et PostgreSQL sont réinitialisés.
+- **Les tests d'intégration et E2E visaient la stack déjà lancée** : une modification de `app/` ou de
+  `spark/` n'était pas testée tant que la stack n'était pas reconstruite à la main. Corrigé par le stage
+  `scripts/ci_env.sh` (API et Spark du commit, Spark de la stack arrêté pendant les tests).
 - **Quality Gate non déclenché par un peu de code non testé** : la condition de couverture est ignorée sous
   un certain nombre de nouvelles lignes, la dégradation de qualité n'a donc pas été démontrée.
 
@@ -145,6 +171,8 @@ et la pipeline est repassée au vert.
 - SonarQube, `tests/unit/test_orders.py` : `pytest.raises(Exception)` remplacé par `pytest.raises(ValidationError)`.
 - Infrastructure : service `kafka-init`, redémarrage automatique de Spark, écriture idempotente dans PostgreSQL.
 - CI : image Jenkins complétée, Jenkinsfile industrialisé, contrôle du Quality Gate scripté.
+- CI : les tests d'intégration exécutent l'API et Spark du workspace, les tests E2E les images construites ;
+  `test_api.py` appelle désormais l'API réelle au lieu d'un `TestClient` en mémoire.
 - Des commits de démonstration (« TEST REGRESSION ») figurent dans l'historique ; le code non testé qu'ils
   avaient ajouté a été supprimé par le commit « Nettoyage ».
 
@@ -153,6 +181,6 @@ et la pipeline est repassée au vert.
 Comment garantir automatiquement qu'une modification ne dégrade ni le fonctionnement ni la qualité ?
 Chaque `push` peut déclencher Jenkins, qui enchaîne des contrôles de plus en plus larges : tests unitaires
 (règles métier, en quelques secondes), tests d'intégration (les composants réels communiquent), build des
-images, test E2E (le parcours complet), puis SonarQube et le Quality Gate (bugs, vulnérabilités,
+images, test E2E sur ces images (le parcours complet), tous exécutés contre le code du commit, puis SonarQube et le Quality Gate (bugs, vulnérabilités,
 duplications, couverture). Un échec à n'importe quel stage arrête la pipeline, comme l'a montré le build
 n°7. Le dépôt garde l'historique, et la Pull Request permet de relire avant intégration.
