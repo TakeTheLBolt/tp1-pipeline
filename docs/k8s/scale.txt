@@ -1,0 +1,23 @@
+$ kubectl scale deployment/sales-api --replicas=3
+deployment.apps/sales-api scaled
+
+$ kubectl get pods -o wide -l app=sales-api
+NAME                         READY   STATUS    RESTARTS   AGE   IP            NODE       NOMINATED NODE   READINESS GATES
+sales-api-7767ff7f79-6gptl   1/1     Running   0          6s    10.244.0.10   minikube   <none>           <none>
+sales-api-7767ff7f79-nk79m   1/1     Running   0          44m   10.244.0.3    minikube   <none>           <none>
+sales-api-7767ff7f79-xg6nd   1/1     Running   0          6s    10.244.0.9    minikube   <none>           <none>
+
+$ kubectl get deployment sales-api
+NAME        READY   UP-TO-DATE   AVAILABLE   AGE
+sales-api   3/3     3            3           44m
+
+$ kubectl get endpoints sales-api
+NAME        ENDPOINTS                                          AGE
+sales-api   10.244.0.10:8000,10.244.0.3:8000,10.244.0.9:8000   44m
+
+$ kubectl scale deployment/sales-api --replicas=1
+deployment.apps/sales-api scaled
+
+$ kubectl get deployment sales-api
+NAME        READY   UP-TO-DATE   AVAILABLE   AGE
+sales-api   1/1     1            1           44m

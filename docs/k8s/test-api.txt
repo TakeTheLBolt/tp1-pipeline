@@ -1,0 +1,12 @@
+$ kubectl port-forward service/sales-api 8000:8000
+Forwarding from 127.0.0.1:8000 -> 8000
+Forwarding from [::1]:8000 -> 8000
+
+$ curl http://localhost:8000/api/health
+{"status":"UP","service":"sales-api"}
+
+$ curl http://localhost:8000/api/products
+[{"product_id":"P001","name":"Laptop Pro","category":"Computers","price":1299.9},{"product_id":"P002","name":"Keyboard","category":"Accessories","price":89.9},{"product_id":"P003","name":"Mouse","category":"Accessories","price":49.9},{"product_id":"P004","name":"Monitor 27","category":"Screens","price":399.9}]
+
+$ curl -o /dev/null -w "%{http_code}" http://localhost:8000/docs
+HTTP 200

@@ -1,0 +1,9 @@
+$ curl -X POST http://localhost:8000/api/orders -H "Content-Type: application/json" -d '{"customer_id":"C100","product_id":"P001","quantity":3,"unit_price":100}'
+{"customer_id":"C100","product_id":"P001","quantity":3,"unit_price":100.0,"order_id":"ORD-7563C678F8","total_amount":300.0,"timestamp":"2026-10-22T09:19:07.342906+00:00"}
+
+$ kubectl exec deploy/postgres -- psql -U sales -d sales -c "SELECT order_id, customer_id, product_id, quantity, unit_price, total_amount, processed_at FROM processed_orders WHERE order_id='ORD-7563C678F8';"
+    order_id    | customer_id | product_id | quantity | unit_price | total_amount |         processed_at          
+----------------+-------------+------------+----------+------------+--------------+-------------------------------
+ ORD-7563C678F8 | C100        | P001       |        3 |     100.00 |       300.00 | 2026-10-22 09:19:08.996707+00
+(1 row)
+

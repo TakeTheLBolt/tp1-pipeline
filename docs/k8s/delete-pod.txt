@@ -1,0 +1,28 @@
+$ kubectl get pods -l app=sales-api
+NAME                         READY   STATUS    RESTARTS   AGE
+sales-api-7767ff7f79-nk79m   1/1     Running   0          44m
+
+$ kubectl delete pod sales-api-7767ff7f79-nk79m
+11:18:24
+pod "sales-api-7767ff7f79-nk79m" deleted from default namespace
+
+$ kubectl get pods -l app=sales-api -w
+NAME                         READY   STATUS              RESTARTS   AGE
+sales-api-7767ff7f79-429tw   0/1     ContainerCreating   0          0s
+sales-api-7767ff7f79-nk79m   1/1     Terminating         0          44m
+sales-api-7767ff7f79-429tw   0/1     ContainerCreating   0          0s
+sales-api-7767ff7f79-429tw   0/1     Running             0          0s
+sales-api-7767ff7f79-nk79m   0/1     Completed           0          44m
+sales-api-7767ff7f79-nk79m   0/1     Completed           0          44m
+sales-api-7767ff7f79-nk79m   0/1     Completed           0          44m
+sales-api-7767ff7f79-429tw   1/1     Running             0          6s
+
+11:18:50
+$ kubectl get deployment sales-api
+NAME        READY   UP-TO-DATE   AVAILABLE   AGE
+sales-api   1/1     1            1           45m
+
+$ kubectl get events --field-selector involvedObject.kind=ReplicaSet
+34s         Normal   SuccessfulDelete   replicaset/sales-api-7767ff7f79        Deleted pod: sales-api-7767ff7f79-xg6nd
+34s         Normal   SuccessfulDelete   replicaset/sales-api-7767ff7f79        Deleted pod: sales-api-7767ff7f79-6gptl
+25s         Normal   SuccessfulCreate   replicaset/sales-api-7767ff7f79        Created pod: sales-api-7767ff7f79-429tw

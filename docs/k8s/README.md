@@ -38,3 +38,39 @@ docker-compose.
 - **Spark** : `Timed out waiting for a node assignment`, puis `UnknownTopicOrPartitionException` (Kafka
   pas encore prêt, puis topic pas encore créé). Le lecteur Kafka de Spark réessaie et le streaming démarre
   dès que le topic existe, sans redémarrage du Pod. Si le job s'arrêtait, le Deployment le relancerait.
+
+## A. Accès à l'API (port-forward)
+
+Sortie : [test-api.txt](test-api.txt). Avec `kubectl port-forward service/sales-api 8000:8000`, l'API
+répond depuis le poste : `/api/health` renvoie `{"status":"UP","service":"sales-api"}`, `/api/products`
+la liste des 4 produits et `/docs` un code HTTP 200.
+
+## B. Mise à l'échelle
+
+Sortie : [scale.txt](scale.txt). Après `kubectl scale deployment/sales-api --replicas=3`, deux nouveaux Pods
+sont créés en quelques secondes à côté du Pod existant (`3/3` disponibles), chacun avec sa propre adresse
+IP. Le Service `sales-api` a alors trois endpoints et répartit les requêtes entre eux. Au retour à
+`--replicas=1`, le ReplicaSet supprime deux Pods.
+
+## C. Suppression d'un Pod
+
+Sortie : [delete-pod.txt](delete-pod.txt).
+
+Après `kubectl delete pod sales-api-7767ff7f79-nk79m`, le ReplicaSet du Deployment a constaté qu'il ne
+restait plus aucun Pod sur l'unique réplica demandé. Il a aussitôt créé un Pod de remplacement,
+`sales-api-7767ff7f79-429tw`, avant même la fin de l'arrêt de l'ancien. Le nouveau Pod a un autre nom et
+une autre adresse IP, et il était prêt en 6 secondes (sonde `/api/health`). Le Service, qui sélectionne les
+Pods par le label `app: sales-api`, l'a pris en charge sans aucune modification : l'état souhaité (1
+réplica) a été rétabli automatiquement.
+
+Limite observée : `kubectl port-forward service/...` se rattache au Pod choisi à son lancement. La
+suppression de ce Pod coupe le port-forward, qu'il faut relancer. Le Service, lui, n'est pas interrompu
+pour les clients situés dans le cluster.
+
+## D. Flux Data
+
+Sortie : [test-flux-data.txt](test-flux-data.txt). La commande `C100 / P001 / 3 × 100` envoyée à l'API
+(`POST /api/orders`, réponse `total_amount: 300.0`, `order_id: ORD-7563C678F8`) est publiée dans Kafka,
+consommée par Spark puis enregistrée dans PostgreSQL environ 1,6 s plus tard, avec
+`total_amount = 300.00`. Tous les échanges passent par les Services Kubernetes (`kafka:29092`,
+`postgres:5432`).
