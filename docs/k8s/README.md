@@ -70,6 +70,13 @@ sont créés en quelques secondes à côté du Pod existant (`3/3` disponibles),
 IP. Le Service `sales-api` a alors trois endpoints et répartit les requêtes entre eux. Au retour à
 `--replicas=1`, le ReplicaSet supprime deux Pods.
 
+**Mise à l'échelle du Deployment `sales-api` à 3 réplicas**
+
+![Mise à l'échelle à 3 réplicas](images/04-scale-3-replicas.png)
+
+Les deux nouveaux Pods (âge 6 s) rejoignent le Pod existant (10 min) : 3 Pods `Running` sur 3 adresses IP
+distinctes, et le Deployment indique `3/3` disponibles.
+
 ## C. Suppression d'un Pod
 
 Sortie : [delete-pod.txt](delete-pod.txt).
